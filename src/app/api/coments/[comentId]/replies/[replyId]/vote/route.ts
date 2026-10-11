@@ -3,16 +3,16 @@ import { prisma } from "@/utils/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface props {
-    params: {
-        commentId: string;
+    params: Promise<{
+        comentId: string;
         replyId: string;
-    };
+    }>;
 }
 
 // إضافة Vote للـ Reply
 export async function POST(request: NextRequest, { params }: props) {
     try {
-        const commentId = parseInt((await params).commentId);
+        const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
         const userPayload = await authincatedAndAuthorize(request);
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest, { params }: props) {
 // حذف Vote من الـ Reply
 export async function DELETE(request: NextRequest, { params }: props) {
     try {
-        const commentId = parseInt((await params).commentId);
+        const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
         const userPayload = await authincatedAndAuthorize(request);
@@ -177,7 +177,7 @@ export async function GET(
     { params }: props
 ) {
     try {
-        const commentId = parseInt((await params).commentId);
+        const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
         const userPayload = await authincatedAndAuthorize(request);

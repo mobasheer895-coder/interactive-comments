@@ -2,9 +2,9 @@ import { authincatedAndAuthorize } from "@/app/midelware/authincatedAndAuthorize
 import { prisma } from "@/utils/prisma";
 import { NextRequest, NextResponse } from "next/server";
 export interface props {
-    params : {
-        comentId: string
-    }
+    params: Promise<{
+        comentId: string;
+    }>
 }
 export async function POST(request:NextRequest , {params}:props) {
     try {
