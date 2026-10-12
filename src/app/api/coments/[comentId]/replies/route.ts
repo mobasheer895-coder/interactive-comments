@@ -5,58 +5,83 @@ import { NextRequest, NextResponse } from "next/server";
 interface props {
     params: Promise<{comentId:string}>
 }
-export async function POST(request:NextRequest, {params}:props) {
+export async function POST(request: NextRequest, { params }: props) {
     try {
         const { content } = await request.json();
-        const commentId = parseInt((await params).comentId)
+        const commentId = parseInt((await params).comentId);
+
         const comment = await prisma.comment.findUnique({
             where: { id: commentId }
-        })
+        });
 
         if (!comment) {
             return NextResponse.json(
-                { message: 'comment not found' },
+                { message: "comment not found" },
                 { status: 404 }
-            )
+            );
         }
 
-    const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
+        const userPayload = await authincatedAndAuthorize(
+            request,
+            ["ADMIN", "USER"]
+        );
 
-    if (!userPayload) {
-            return NextResponse.json({message:'Forbidden'} , {status:403})
-        }
-        const validition = commentSchema.safeParse({content})
-        // اذا لم تطابق الشروط تعيد رسالة الخطأ
-        if (!validition.success) {
+        if (!userPayload) {
             return NextResponse.json(
-                { message: validition.error.issues[0].message },
+                { message: "Forbidden" },
+                { status: 403 }
+            );
+        }
+
+        const validation = commentSchema.safeParse({ content });
+
+        if (!validation.success) {
+            return NextResponse.json(
+                { message: validation.error.issues[0].message },
                 { status: 400 }
             );
         }
 
         const createdReplay = await prisma.reply.create({
-            data:{
-                content,
+            data: {
+                content: validation.data.content,
                 commentId,
-                userId:userPayload.userId
+                userId: userPayload.userId
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true
+                    }
+                },
+                _count: {
+                    select: {
+                        vote: true
+                    }
+                }
             }
-        })
+        });
 
         return NextResponse.json(
-            {message:'Created replay' , createdReplay},
-            {status:201}
-        )
+            {
+                message: "Created replay",
+                createdReplay
+            },
+            { status: 201 }
+        );
     } catch (error) {
-        // إرجاع رسالة خطأ عند حدوث خطأ داخلي في السيرفر
         return NextResponse.json(
-                {
-                    message:'internal server error',
-                    error:(error as Error).message
-                },
-                {status:500}
-            )
+            {
+                message: "internal server error",
+                error: (error as Error).message
+            },
+            { status: 500 }
+        );
     }
 }
+
 
 export async function GET(request:NextRequest, {params}:props) {
     try {

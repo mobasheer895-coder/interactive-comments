@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { LiaUserCircle } from "react-icons/lia";
+import { toast } from "react-toastify";
 
 
 
@@ -45,6 +46,7 @@ const Register = () => {
 
         console.log(res.data);
         router.push('/coments')
+        toast.success('your regiserd succefully')
     } catch (error) {
         console.error(error);
     }

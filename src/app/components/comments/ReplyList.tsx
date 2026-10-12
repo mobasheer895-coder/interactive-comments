@@ -5,29 +5,18 @@ import CommentForm from "./CommentForm";
 import CommentCard from "./CommentCard";
 import Popup from "./PopUp";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteReplyAction, editReplyAction, Reply, setRepliesAction, voteReplyAction } from "@/app/redux/slices";
 
-interface Reply {
-    id: number;
-    content: string;
-    createdAt: string;
-    user: {
-        id: number;
-        name: string;
-        image: string;
-    };
-    _count: {
-        vote: number;
-    };
-    hasVoted: boolean;
-}
 
 interface ReplyListProps {
-    repliesVersion: number;
     commentId: number;
 }
-const ReplyList = ({commentId , repliesVersion}:ReplyListProps) => {
+const ReplyList = ({commentId}:ReplyListProps) => {
+    const dispatch = useDispatch()
 
-    const [replies, setReplies] = useState<Reply[]>([]);
+    const replies: Reply[] = useSelector((state: any) => state.comments.replies[commentId] ?? [])
+
 
     const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
 
@@ -51,11 +40,15 @@ useEffect(() => {
         try {
             setLoading(true);
 
-            const data = await getReplies(commentId.toString());
-            console.log("Replies data:", data.data);
-            setReplies(data.data);
+            const data = await getReplies(commentId.toString())
+            dispatch(
+                    setRepliesAction({
+                        commentId,
+                        replies: data.data,
+                    })
+                );
         } catch (error) {
-    console.error("Failed to load replies:", error);
+    handleError(error)
 
 } finally {
             setLoading(false);
@@ -63,25 +56,38 @@ useEffect(() => {
     };
 
     fetchReplies();
-}, [commentId , repliesVersion]);
+}, [commentId , dispatch]);
 
-    const handleReplyVote = async (replyId: number,value: 1 | -1) => {
-            try {
-                setActionError("")
-                if (value === 1) {
-                await addReplyVote(commentId,replyId);
-            } else {
-                await deleteReplyVote(commentId,replyId);
-            }
-            } catch (error) {
-                toast.error(
+    const handleReplyVote = async (
+    replyId: number,
+    value: 1 | -1
+) => {
+    try {
+        setActionError("");
+
+        if (value === 1) {
+            await addReplyVote(commentId, replyId);
+        } else {
+            await deleteReplyVote(commentId, replyId);
+        }
+
+        dispatch(
+            voteReplyAction({
+                commentId,
+                replyId,
+                value,
+            })
+        );
+    } catch (error) {
+        toast.error(
             value === 1
                 ? "Failed to submit your vote."
                 : "Failed to remove your vote."
         );
-                throw error
-            }
-        }
+
+        throw error;
+    }
+};
 
 
         const handleEditReply = async (replyId:number , content:string) => {
@@ -93,11 +99,12 @@ useEffect(() => {
                         replyId.toString()
                     );
 
-                    setReplies((prev) =>
-                        prev.map((reply) =>
-                            reply.id === replyId ? updatedReply.reply : reply
-                        )
-                    );
+                    dispatch(
+                editReplyAction({
+                    commentId,
+                    reply: updatedReply.reply,
+                })
+            );
                 } catch (error) {
                     handleError(error)
                     throw error
@@ -116,8 +123,11 @@ useEffect(() => {
                 setActionError("")
                 await deleteReply(commentId.toString(),deletingReplyId.toString())
         
-            setReplies((prev) =>
-                prev.filter((reply) => reply.id !== deletingReplyId)
+            dispatch(
+                deleteReplyAction({
+                    commentId,
+                    replyId: deletingReplyId,
+                })
             );
         
             setDeletingReplyId(null)

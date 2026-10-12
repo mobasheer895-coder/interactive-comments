@@ -11,7 +11,7 @@ interface CommentCardProps {
     user: {
         id: number;
         name: string;
-        image: string;
+        image: string | null
     };
     voteCount: number;
     hasVoted: boolean;

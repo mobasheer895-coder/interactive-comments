@@ -4,6 +4,7 @@ import axios from "axios"
 import { useRouter } from "next/navigation"
 import AuthForm from "@/app/components/AuthForm"
 import { DOMAIN } from "@/utils/constant"
+import { toast } from "react-toastify"
 
 export interface LoginData {
     email :string
@@ -24,8 +25,14 @@ const Login = () => {
         );
         console.log(res.data)
         router.push('/coments')
+        toast.success('your login succefolly')
     } catch (error) {
-        console.error(error)
+        if (axios.isAxiosError(error)) {
+        console.error("Login error:", error.response?.status);
+        console.error("Error response:", error.response?.data);
+    } else {
+        console.error(error);
+    }
     }
 };
 

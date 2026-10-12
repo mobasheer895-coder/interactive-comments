@@ -106,21 +106,32 @@ interface addReplyData {
 content:string
 }
 // دالة اضافة البوست
-export async function addReply(coment: addReplyData,comentId: string) {
-    //  ارسال المعلومات الى الباك (response واستلام request ارسال)
+export async function addReply(coment: addReplyData, comentId: string) {
     try {
-        const response = await fetch(`${DOMAIN}/api/coments/${comentId}/replies` , {
-            method:"POST",
-            body: JSON.stringify(coment),
-            headers: {
-        "Content-Type": "application/json",
-        },
-        })
-        return response.json()
+        const response = await fetch(
+            `${DOMAIN}/api/coments/${comentId}/replies`,
+            {
+                method: "POST",
+                body: JSON.stringify(coment),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
 
-        // اذا يوجد خطأ يعيده
-    } catch (error : any) {
-        throw new Error (error)
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to add reply.");
+        }
+
+        return data;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+
+        throw new Error("Something went wrong.");
     }
 }
 

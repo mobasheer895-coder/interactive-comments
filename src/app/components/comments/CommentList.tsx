@@ -7,6 +7,9 @@ import Popup from "./PopUp";
 import ReplyList from "./ReplyList";
 import { toast } from "react-toastify";
 import { CurrentUser, getCurrentUser } from "@/app/apiCalls/auth";
+import { useDispatch, useSelector } from "react-redux";
+import { addComent, addReplyAction, deleteComent, editComent, setComents } from "@/app/redux/slices";
+
 
 interface Comment {
     id: number;
@@ -27,7 +30,10 @@ interface Comment {
 }
 
 const CommentList = () => {
-    const [comments, setComments] = useState<Comment[]>([]);
+
+    const dispatch = useDispatch();
+
+    const comments : Comment[] = useSelector((state: any) => state.comments.comments);
 
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
@@ -42,8 +48,6 @@ const CommentList = () => {
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState("");
-
-    const [repliesVersion, setRepliesVersion] = useState(0);
 
     const [actionError, setActionError] = useState("");
 
@@ -76,13 +80,18 @@ const handleError = (error: unknown) => {
             const response = await addComment({ content });
 
 
-setComments((prev) => [response.createdComment, ...prev]);
+dispatch(
+    addComent({
+        ...response.createdComment,
+        hasVoted:false
+    })
+)
 toast.success('created comment succesfully')
         } catch (error) {
             handleError(error)
             throw error
         }
-    };
+    }
 
     const handleEditComment = async (id:number , content:string) => {
         try {
@@ -92,13 +101,10 @@ toast.success('created comment succesfully')
         id.toString()
     );
 
-    setComments((prev) =>
-        prev.map((comment) =>
-            comment.id === id
-                ? updatedComment.comment
-                : comment
-        )
-    )
+    dispatch(editComent({
+    ...updatedComment.comment,
+    hasVoted: comments.find((comment) => comment.id === id)?.hasVoted ?? false,
+}));
     toast.success("Comment updated successfully!")
         } catch (error) {
             handleError(error);
@@ -117,9 +123,7 @@ toast.success('created comment succesfully')
             setActionError("")
             await deleteComment(deletingCommentId.toString());
 
-        setComments((prev) =>
-            prev.filter((comment) => comment.id !== deletingCommentId)
-        );
+        dispatch(deleteComent(deletingCommentId));
 
         setDeletingCommentId(null);
         toast.success("Comment deleted successfully!");
@@ -129,32 +133,43 @@ toast.success('created comment succesfully')
         }
     };
 
-    const handleAddReply = async (commentId:number , content:string) => {
-        try {
-            setActionError("")
-            await addReply({content} , commentId.toString())
+const handleAddReply = async (commentId: number, content: string) => {
+    try {
+        setActionError("");
 
-        setRepliesVersion((prev) => prev + 1)
-        } catch (error) {
-            handleError(error)
-            throw error
-        }
-    };
+        const response = await addReply(
+            { content },
+            commentId.toString()
+        );
+
+        dispatch(
+            addReplyAction({
+                commentId,
+                reply: response.createdReplay,
+            })
+        );
+    } catch (error) {
+        handleError(error);
+        throw error;
+    }
+};
 
     useEffect(() => {
     const fetchData = async () => {
         setLoading(true);
         setError("");
         try {
-            const user = await getCurrentUser();
-            const data = await getComments();
+            const user = await getCurrentUser()
+            const data = await getComments()
             setCurrentUser(user)
-            setComments(
+            dispatch(
+                setComents(
                 data.map((comment: Omit<Comment, "hasVoted">) => ({
                     ...comment,
                     hasVoted: comment.vote.length > 0,
                 }))
-            );
+            )
+            )
         } catch (error) {
             console.error("Failed to load comments:", error)
             setError("Failed to load comments.")
@@ -165,7 +180,7 @@ toast.success('created comment succesfully')
     };
 
     fetchData();
-}, []);
+}, [dispatch]);
 
     if (loading) {
     return <p>Loading comments...</p>;
@@ -238,7 +253,6 @@ if (error) {
                     {showRepliesCommentId === comment.id && (
                         <ReplyList 
                         commentId={comment.id}
-                        repliesVersion={repliesVersion}
                         />
                     )}
 
