@@ -6,9 +6,9 @@ import CommentForm from "./CommentForm";
 import Popup from "./PopUp";
 import ReplyList from "./ReplyList";
 import { toast } from "react-toastify";
-import { CurrentUser, getCurrentUser } from "@/app/apiCalls/auth";
 import { useDispatch, useSelector } from "react-redux";
-import { addComent, addReplyAction, deleteComent, editComent, setComents } from "@/app/redux/slices";
+import { addComent, addReplyAction, deleteComent, editComent, setComents } from "@/app/redux/slices"
+import type { CurrentUser } from "@/app/apiCalls/auth";
 
 
 interface Comment {
@@ -33,9 +33,9 @@ const CommentList = () => {
 
     const dispatch = useDispatch();
 
-    const comments : Comment[] = useSelector((state: any) => state.comments.comments);
+    const comments : Comment[] = useSelector((state: any) => state.comments.comments)
 
-    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+    const currentUser : CurrentUser = useSelector((state:any) => state.auth.currentUser)
 
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
 
@@ -159,9 +159,7 @@ const handleAddReply = async (commentId: number, content: string) => {
         setLoading(true);
         setError("");
         try {
-            const user = await getCurrentUser()
             const data = await getComments()
-            setCurrentUser(user)
             dispatch(
                 setComents(
                 data.map((comment: Omit<Comment, "hasVoted">) => ({
