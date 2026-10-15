@@ -37,13 +37,21 @@ export interface Reply {
 }
 
 export interface initialStateProps {
-    comments: Comment[];
-    replies: Record<number, Reply[]>;
+    comments: Comment[]
+    replies: Record<number, Reply[]>
+    commentLoading: boolean
+    commentError: string | null
+    repliesLoading: boolean,
+    repliesError: string | null
 }
 
 const initialState: initialStateProps = {
     comments: [],
     replies: {},
+    commentLoading:false,
+    commentError:null,
+    repliesLoading:false,
+    repliesError:null
 };
 
 const commentsSlice = createSlice({
@@ -110,6 +118,7 @@ const commentsSlice = createSlice({
                 (reply) => reply.id !== replyId
             );
         },
+
         voteReplyAction: (state, action) => {
     const { commentId, replyId, value } = action.payload;
     const replies = state.replies[commentId];
@@ -127,10 +136,26 @@ const commentsSlice = createSlice({
         reply._count.vote = Math.max(0, reply._count.vote - 1);
         reply.hasVoted = false;
     }
-},
+        },
+
+        setCommentsLoading: (state, action) => {
+            state.commentLoading = action.payload;
+        },
+
+        setCommentsError: (state, action) => {
+            state.commentError = action.payload;
+        },
+
+        setRepliesLoading: (state, action) => {
+            state.repliesLoading = action.payload;
+        },
+
+        setRepliesError: (state, action) => {
+            state.repliesError = action.payload;
+        },
     },
 });
 
-export const {setComents,addComent,deleteComent,editComent,setRepliesAction,addReplyAction,editReplyAction,deleteReplyAction,voteReplyAction} = commentsSlice.actions;
+export const {setComents,addComent,deleteComent,editComent,setRepliesAction,addReplyAction,editReplyAction,deleteReplyAction,voteReplyAction,setCommentsLoading,setCommentsError,setRepliesLoading,setRepliesError} = commentsSlice.actions;
 
 export default commentsSlice.reducer;

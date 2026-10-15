@@ -6,7 +6,7 @@ import CommentCard from "./CommentCard";
 import Popup from "./PopUp";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteReplyAction, editReplyAction, Reply, setRepliesAction, voteReplyAction } from "@/app/redux/slices";
+import { deleteReplyAction, editReplyAction, Reply, setRepliesAction, setRepliesError, setRepliesLoading, voteReplyAction } from "@/app/redux/slices";
 
 
 interface ReplyListProps {
@@ -17,13 +17,13 @@ const ReplyList = ({commentId}:ReplyListProps) => {
 
     const replies: Reply[] = useSelector((state: any) => state.comments.replies[commentId] ?? [])
 
+    const loading = useSelector((state:any) => state.comments.repliesLoading)
+
+    const error = useSelector((state:any) => state.comments.repliesError)
 
     const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
 
     const [deletingReplyId, setDeletingReplyId] = useState<number | null>(null);
-
-    const [loading, setLoading] = useState(true);
-
 
     const [actionError, setActionError] = useState("");
 
@@ -37,9 +37,10 @@ const ReplyList = ({commentId}:ReplyListProps) => {
 
 useEffect(() => {
     const fetchReplies = async () => {
-        try {
-            setLoading(true);
+        dispatch(setRepliesLoading(true))
+        dispatch(setRepliesError(null))
 
+        try {
             const data = await getReplies(commentId.toString())
             dispatch(
                     setRepliesAction({
@@ -48,20 +49,21 @@ useEffect(() => {
                     })
                 );
         } catch (error) {
-    handleError(error)
+            dispatch(setRepliesError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load replies."
+            ))
 
-} finally {
-            setLoading(false);
-        }
+        } finally {
+                    dispatch(setRepliesLoading(false))
+                }
     };
 
     fetchReplies();
 }, [commentId , dispatch]);
 
-    const handleReplyVote = async (
-    replyId: number,
-    value: 1 | -1
-) => {
+    const handleReplyVote = async (replyId: number,value: 1 | -1) => {
     try {
         setActionError("");
 
@@ -138,6 +140,9 @@ useEffect(() => {
         }
         if (loading) {
             return <p>Loading replies...</p>
+        }
+        if (error) {
+            return <p>{error}</p>
         }
 
     return (

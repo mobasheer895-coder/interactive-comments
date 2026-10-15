@@ -36,7 +36,7 @@ export async function POST(request:NextRequest) {
         },
         _count: {
             select: {
-                vote: true
+                vote: true,
             }
         }
     }
@@ -91,7 +91,8 @@ export async function GET(request:NextRequest) {
                 },
                 _count: {
                     select:{
-                        vote:true
+                        vote:true,
+                        reply:true
                     }
                 },
                 vote: {

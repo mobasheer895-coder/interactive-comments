@@ -20,3 +20,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     const data = await response.json();
     return data.user;
 }
+
+export const logout = async () => {
+  const response = await fetch("/api/logout", {
+    method: "POST",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to log out.");
+  }
+};

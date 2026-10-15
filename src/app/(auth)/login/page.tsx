@@ -2,7 +2,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { useRouter } from "next/navigation"
-import AuthForm from "@/app/components/AuthForm"
+import AuthForm from "@/app/components/auth/AuthForm"
 import { DOMAIN } from "@/utils/constant"
 import { toast } from "react-toastify"
 

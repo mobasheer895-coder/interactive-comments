@@ -11,12 +11,12 @@ interface PopupContent {
 
 const popupSettings: Record<'logout' | 'delete', PopupContent> = {
     logout: {
-        title: "Are you sure you want to logout from DashStack?",
+        title: "Are you sure you want to logout from comments platform",
         btnCancel: "No",
         btnConfirm: "Yes",
     },
     delete: {
-        title: "Are you sure you want to delete this product?",
+        title: "Are you sure you want to deleted",
         btnCancel: "No",
         btnConfirm: "Yes",
     },

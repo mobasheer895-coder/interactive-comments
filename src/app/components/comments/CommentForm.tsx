@@ -56,7 +56,7 @@ const CommentForm = ({initialContent = "", submitText , placeholder , onSuccess 
 
             <button type="submit"
             // منع إرسال النموذج أثناء تنفيذ العملية
-            disabled={loading}>
+            disabled={loading} className="hover:bg-blue-600 hover:text-white p-2 rounded-xl cursor-pointer bg-blue-400 transition-all">
                 {/* عرض حالة التحميل أو نص الزر */}
                 {loading ? "Loading..." : submitText}
             </button>

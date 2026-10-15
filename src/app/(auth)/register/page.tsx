@@ -1,5 +1,5 @@
 "use client"
-import AuthForm from "@/app/components/AuthForm";
+import AuthForm from "@/app/components/auth/AuthForm";
 import { DOMAIN } from "@/utils/constant";
 import axios from "axios";
 import { useRouter } from "next/navigation";

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react";
+import { RefObject, useEffect, useState } from "react";
 import CommentCard from "./CommentCard"
 import { addComment, addReply, addVote, deleteComment, deleteVote, editComment, getComments } from "@/app/apiCalls/comment";
 import CommentForm from "./CommentForm";
@@ -7,7 +7,7 @@ import Popup from "./PopUp";
 import ReplyList from "./ReplyList";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { addComent, addReplyAction, deleteComent, editComent, setComents } from "@/app/redux/slices"
+import { addComent, addReplyAction, deleteComent, editComent, setComents, setCommentsError, setCommentsLoading } from "@/app/redux/slices"
 import type { CurrentUser } from "@/app/apiCalls/auth";
 
 
@@ -21,21 +21,28 @@ interface Comment {
         image: string;
     };
     _count: {
-        vote: number;
+        vote: number
+        reply: number
     };
     vote: {
     id: number;
 }[];
     hasVoted: boolean;
 }
-
-const CommentList = () => {
+interface CommentListProps {
+    addCommentRef: RefObject<HTMLDivElement | null>;
+}
+const CommentList = ({addCommentRef}:CommentListProps) => {
 
     const dispatch = useDispatch();
 
     const comments : Comment[] = useSelector((state: any) => state.comments.comments)
 
-    const currentUser : CurrentUser = useSelector((state:any) => state.auth.currentUser)
+    const currentUser : CurrentUser|null = useSelector((state:any) => state.auth.currentUser)
+
+    const loading = useSelector((state:any) => state.comments.commentLoading)
+
+    const error = useSelector((state:any) => state.comments.commentError)
 
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
 
@@ -44,10 +51,6 @@ const CommentList = () => {
     const [replyingCommentId, setReplyingCommentId] = useState<number | null>(null);
 
     const [showRepliesCommentId, setShowRepliesCommentId] = useState<number | null>(null);
-
-    const [loading, setLoading] = useState(true);
-
-    const [error, setError] = useState("");
 
     const [actionError, setActionError] = useState("");
 
@@ -112,7 +115,6 @@ toast.success('created comment succesfully')
     };
 
     const handleDeleteComment = (id: number) => {
-        console.log("Delete clicked:", id);
         setDeletingCommentId(id);
     };
 
@@ -148,6 +150,7 @@ const handleAddReply = async (commentId: number, content: string) => {
                 reply: response.createdReplay,
             })
         );
+        toast.success('created reply')
     } catch (error) {
         handleError(error);
         throw error;
@@ -156,8 +159,8 @@ const handleAddReply = async (commentId: number, content: string) => {
 
     useEffect(() => {
     const fetchData = async () => {
-        setLoading(true);
-        setError("");
+        dispatch(setCommentsLoading(true))
+        dispatch(setCommentsError(""))
         try {
             const data = await getComments()
             dispatch(
@@ -169,11 +172,10 @@ const handleAddReply = async (commentId: number, content: string) => {
             )
             )
         } catch (error) {
-            console.error("Failed to load comments:", error)
-            setError("Failed to load comments.")
+            dispatch(setCommentsError("Failed to load comments."))
         }
         finally {
-            setLoading(false);
+            dispatch(setCommentsLoading(false))
         }
     };
 
@@ -189,20 +191,11 @@ if (error) {
 }
 
         return (
-        <div className="bg-gray-200 flex flex-col gap-4 items-center p-15">
+        <div className="bg-gray-200 flex flex-col gap-4 items-center p-15 mt-8">
             {actionError && (
                 <p>{actionError}</p>
             )}
             {comments.map((comment) => {
-                console.log({
-    currentUserId: currentUser?.id,
-    commentUserId: comment.user.id,
-    currentUserRole: currentUser?.role,
-    canManageComment:
-        currentUser !== null &&
-        (currentUser.id === comment.user.id ||
-            currentUser.role === "ADMIN"),
-});
                 const canManageComment =
         currentUser !== null &&
         (currentUser.id === comment.user.id ||
@@ -246,6 +239,7 @@ if (error) {
                                     prev === comment.id ? null : comment.id
                                 )
                             }
+                            repliesCount={comment._count.reply}
                         />
                     )}
                     {showRepliesCommentId === comment.id && (
@@ -267,11 +261,13 @@ if (error) {
                 </div>
                 )
 })}
-            <CommentForm
-    submitText="Add Comment"
-    placeholder="Write a comment..."
-    onSubmit={handleAddComment}
-/>
+            <div ref={addCommentRef}>
+                <CommentForm
+                    submitText="Add Comment"
+                    placeholder="Write a comment..."
+                    onSubmit={handleAddComment}
+                />
+            </div>
                 {deletingCommentId !== null && (
                     <Popup
                         type="delete"

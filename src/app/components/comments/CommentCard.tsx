@@ -21,9 +21,11 @@ interface CommentCardProps {
     onDelete?: () => void;
     onReply?: () => void;
     onShowReplies?: () => void;
+
+    repliesCount?: number;
 }
 
-const CommentCard = ({ content, createdAt, user, voteCount,hasVoted,
+const CommentCard = ({ content, createdAt, user, voteCount,hasVoted,repliesCount,
     onVote, onEdit, onDelete, onReply, onShowReplies,}: CommentCardProps) => {
     
 return (
@@ -58,10 +60,12 @@ return (
 
                 
 
-                {onShowReplies && (
-                    <button onClick={onShowReplies}>
-                        Show replies
-                    </button>
+                {repliesCount !== undefined &&
+                    repliesCount > 0 &&
+                    onShowReplies && (
+                        <button onClick={onShowReplies}>
+                            Show replies
+                        </button>
                 )}
             </div>
         </div>
