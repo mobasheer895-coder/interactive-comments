@@ -11,7 +11,7 @@ export async function POST(request:NextRequest , {params}:props) {
 
         const comentId = parseInt((await params).comentId)
 
-        const userPayload = await authincatedAndAuthorize(request)
+        const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
 
         if (!userPayload) {
             return NextResponse.json({message:'Forbidden'} , {status:403})
@@ -75,7 +75,7 @@ export async function DELETE(request:NextRequest , {params}:props) {
     try {
         const comentId = parseInt((await params).comentId)
 
-        const userPayload = await authincatedAndAuthorize(request)
+        const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
 
         if (!userPayload) {
             return NextResponse.json({message:'Forbidden'} , {status:403})
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest, { params }: props) {
     try {
         const comentId = parseInt((await params).comentId);
 
-        const userPayload = await authincatedAndAuthorize(request);
+        const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
 
         if (!userPayload) {
             return NextResponse.json(

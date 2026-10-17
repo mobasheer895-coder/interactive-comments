@@ -15,7 +15,7 @@ export async function POST(request: NextRequest, { params }: props) {
         const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
-        const userPayload = await authincatedAndAuthorize(request);
+        const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
 
         if (!userPayload) {
             return NextResponse.json(
@@ -96,7 +96,7 @@ export async function DELETE(request: NextRequest, { params }: props) {
         const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
-        const userPayload = await authincatedAndAuthorize(request);
+        const userPayload = await authincatedAndAuthorize(request,["ADMIN" , "USER"])
 
         if (!userPayload) {
             return NextResponse.json(
@@ -180,7 +180,7 @@ export async function GET(
         const commentId = parseInt((await params).comentId);
         const replyId = parseInt((await params).replyId);
 
-        const userPayload = await authincatedAndAuthorize(request);
+        const userPayload = await authincatedAndAuthorize(request)
 
         if (!userPayload) {
             return NextResponse.json(

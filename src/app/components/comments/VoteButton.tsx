@@ -18,7 +18,6 @@ const VoteButton = ({voteCount , hasVoted , onVote}: VoteButtonProps) => {
     const handleAddVote = async () => {
         if (currentHasVoted) {
             toast.error('You have already voted on this comment.')
-            return
         }
 
         try {
@@ -27,20 +26,30 @@ const VoteButton = ({voteCount , hasVoted , onVote}: VoteButtonProps) => {
         setCurrentHasVoted(true);
         toast.success("Your vote has been recorded successfully.");
     } catch (error) {
-        toast.error("Failed to submit your vote")
-        throw error
+        if (
+            !(error instanceof Error &&
+            error.message === "Authentication required")
+    ) {
+        toast.error("Failed to submit your vote");
+    }
     }
     };
 
     const handleDeleteVote = async () => {
-        if (!currentHasVoted) return;
-
+    try {
         await onVote(-1)
-
-        setCurrentVoteCount((prev) => prev - 1);
+        setCurrentVoteCount((prev) => prev - 1)
+        setCurrentHasVoted(false)
         toast.success("Your vote has been removed successfully.");
-        setCurrentHasVoted(false);
-    };
+    } catch (error) {
+            if (
+            !(error instanceof Error &&
+            error.message === "Authentication required")
+        ) {
+            toast.error("Failed to submit your vote");
+        }
+    }
+};
 
     return (
         <div className="flex flex-col gap-4 bg-blue-50 p-2 text-blue-800 font-semibold rounded-lg">

@@ -39,6 +39,7 @@ const CommentList = ({addCommentRef}:CommentListProps) => {
     const comments : Comment[] = useSelector((state: any) => state.comments.comments)
 
     const currentUser : CurrentUser|null = useSelector((state:any) => state.auth.currentUser)
+    
 
     const loading = useSelector((state:any) => state.comments.commentLoading)
 
@@ -63,13 +64,17 @@ const handleError = (error: unknown) => {
 };
 
     const handleCommentVote = async (commentId: number,value: 1 | -1) => {
+        if (!currentUser) {
+            toast.error('please login')
+            throw new Error("Authentication required")
+        }
         try {
             setActionError("")
             if (value === 1) {
-        await addVote(commentId);
-    } else {
-        await deleteVote(commentId);
-    }
+                await addVote(commentId)
+            } else {
+                await deleteVote(commentId);
+            }
         } catch (error) {
             handleError(error)
             throw error
@@ -77,6 +82,10 @@ const handleError = (error: unknown) => {
     };
 
     const handleAddComment = async (content:string) => {
+        if (!currentUser) {
+            toast.error('please login')
+            return;
+        }
         try {
             setActionError("")
 
@@ -136,6 +145,10 @@ toast.success('created comment succesfully')
     };
 
 const handleAddReply = async (commentId: number, content: string) => {
+    if (!currentUser) {
+        toast.error("Please login");
+        return;
+    }
     try {
         setActionError("");
 
@@ -155,7 +168,7 @@ const handleAddReply = async (commentId: number, content: string) => {
         handleError(error);
         throw error;
     }
-};
+}
 
     useEffect(() => {
     const fetchData = async () => {
@@ -191,17 +204,14 @@ if (error) {
 }
 
         return (
-        <div className="bg-gray-200 flex flex-col gap-4 items-center p-15 mt-8">
+        <div className="bg-gray-200 flex flex-col gap-5 items-center p-15 mt-8">
             {actionError && (
                 <p>{actionError}</p>
             )}
             {comments.map((comment) => {
-                const canManageComment =
-        currentUser !== null &&
-        (currentUser.id === comment.user.id ||
-            currentUser.role === "ADMIN");
+                const canManageComment = currentUser !== null && (currentUser.id === comment.user.id || currentUser.role === "ADMIN")
                 return(
-                    <div key={comment.id} className="">
+                    <div key={comment.id} >
                     {editingCommentId === comment.id ? (
                         <CommentForm
                             initialContent={comment.content}
@@ -233,7 +243,14 @@ if (error) {
                                     ? () => handleDeleteComment(comment.id)
                                     : undefined
                             }
-                            onReply={() => setReplyingCommentId(comment.id)}
+                            onReply={() => {
+                                if (!currentUser) {
+                                    toast.error("Please login")
+                                    return;
+                                }
+
+                                setReplyingCommentId(comment.id);
+                            }}
                             onShowReplies={() =>
                                 setShowRepliesCommentId((prev) =>
                                     prev === comment.id ? null : comment.id

@@ -7,6 +7,7 @@ import Popup from "./PopUp";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteReplyAction, editReplyAction, Reply, setRepliesAction, setRepliesError, setRepliesLoading, voteReplyAction } from "@/app/redux/slices";
+import { CurrentUser } from "@/app/apiCalls/auth";
 
 
 interface ReplyListProps {
@@ -16,6 +17,8 @@ const ReplyList = ({commentId}:ReplyListProps) => {
     const dispatch = useDispatch()
 
     const replies: Reply[] = useSelector((state: any) => state.comments.replies[commentId] ?? [])
+
+    const currentUser : CurrentUser|null = useSelector((state:any) => state.auth.currentUser)
 
     const loading = useSelector((state:any) => state.comments.repliesLoading)
 
@@ -64,6 +67,10 @@ useEffect(() => {
 }, [commentId , dispatch]);
 
     const handleReplyVote = async (replyId: number,value: 1 | -1) => {
+        if (!currentUser) {
+            toast.error("Please login");
+            throw new Error("Authentication required");
+        }
     try {
         setActionError("");
 
@@ -81,11 +88,16 @@ useEffect(() => {
             })
         );
     } catch (error) {
-        toast.error(
-            value === 1
-                ? "Failed to submit your vote."
-                : "Failed to remove your vote."
-        );
+        if (
+            !(error instanceof Error &&
+            error.message === "Authentication required")
+        ) {
+            toast.error(
+                value === 1
+                    ? "Failed to submit your vote."
+                    : "Failed to remove your vote."
+            );
+        }
 
         throw error;
     }
@@ -146,9 +158,15 @@ useEffect(() => {
         }
 
     return (
-        <div>
-            {replies.map((reply) => (
-                <div key={reply.id}>
+    <div className="ml-6 mb-6">
+        <div className="border-l-2 border-gray-300 flex flex-col self-stretch">
+            {replies.map((reply) => {
+                const canManageReply = currentUser !== null && (currentUser.role === "ADMIN" || currentUser.id === reply.user.id)
+                return (
+                    <div
+                    key={reply.id}
+                    className="relative pl-7 before:absolute before:top-17 before:left-0 before:w-10 before:border-t-2 before:border-gray-300"
+                >
                     {editingReplyId === reply.id ? (
                         <CommentForm
                             initialContent={reply.content}
@@ -160,7 +178,8 @@ useEffect(() => {
                             onSuccess={() => setEditingReplyId(null)}
                         />
                     ) : (
-                        <CommentCard
+                        <div className="ml-3 mt-4">
+                            <CommentCard
                             id={reply.id}
                             content={reply.content}
                             createdAt={reply.createdAt}
@@ -168,23 +187,35 @@ useEffect(() => {
                             voteCount={reply._count.vote}
                             hasVoted={reply.hasVoted}
                             onVote={(value) => handleReplyVote(reply.id, value)}
-                            onEdit={() => setEditingReplyId(reply.id)}
-                            onDelete={() => handleDeleteReply(reply.id)}
+                            onEdit={
+                                canManageReply
+                                    ? () => setEditingReplyId(reply.id)
+                                    : undefined
+                            }
+                            onDelete={
+                                canManageReply
+                                    ? () => handleDeleteReply(reply.id)
+                                    : undefined
+                            }
                         />
+                        </div>
                     )}
-
                 </div>
-            ))}
-            {actionError && <p>{actionError}</p>}
-                {deletingReplyId !== null && (
-                    <Popup
-                        type="delete"
-                        onConfirm={handleConfirmDelete}
-                        onClose={() => setDeletingReplyId(null)}
-                    />
-                )}
+                )
+            })}
         </div>
-    )
+
+        {actionError && <p>{actionError}</p>}
+
+        {deletingReplyId !== null && (
+            <Popup
+                type="delete"
+                onConfirm={handleConfirmDelete}
+                onClose={() => setDeletingReplyId(null)}
+            />
+        )}
+    </div>
+);
 }
 
 export default ReplyList

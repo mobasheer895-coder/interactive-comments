@@ -28,10 +28,10 @@ const NavBar = ({logo , onAddCommentClick , btn}:NavBarProps) => {
       console.error("Logout failed:", error)
       toast.error("Failed to log out")
     }
-  };
+  }
     return (
         <>
-            <nav className="fixed w-full flex justify-between items-center p-4 bg-gray-300">
+            <nav className="fixed z-50 w-full flex justify-between items-center p-4 bg-gray-300">
             <h1>{logo}</h1>
             <div className="flex gap-5">
                 <ul>
